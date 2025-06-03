@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
+	"github.com/Knetic/govaluate"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
 )
@@ -42,5 +44,29 @@ func main() {
 			bot.Send(message)
 			continue
 		}
+
+		result, err := evaluateExpression(userInput)
+		var reply string
+		if err != nil {
+			reply = "Ты неправильно записал пример. Попробуй ещё раз!"
+		} else {
+			reply = userInput + " = " + result
+		}
+
+		bot.Send(tgbotapi.NewMessage(chatID, reply))
 	}
+}
+
+func evaluateExpression(expression string) (string, error) {
+	evaluatedExpression, err := govaluate.NewEvaluableExpression(expression)
+	if err != nil {
+		return "", err
+	}
+
+	result, err := evaluatedExpression.Evaluate(nil)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%v", result), nil
 }
